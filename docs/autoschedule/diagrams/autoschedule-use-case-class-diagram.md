@@ -162,7 +162,7 @@ neither appears in the other's diagram. The seam is drawn in
 `AddToPlanAutoscheduleIntegrationTest`.
 
 Package paths in the diagram match the current source. No CAVE package migration has been
-performed — see [`../../cave/cave-final.md`](../../cave/cave-final.md) — so if the team later
+performed — see [`../../cave/cave-final.md`](../../archive/cave/cave-final.md) — so if the team later
 renames packages, the `.puml` needs the same rename and a re-render.
 
 ## Known simplifications

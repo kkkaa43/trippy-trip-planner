@@ -301,4 +301,4 @@ take over each other's assigned code.
 - **Alex's work is merged** — `7e3b460` (discovery, bookmarking) and `224481b` (manual
   add/edit/remove). His authorship is preserved; his files are his.
 - **CAVE packaging** is an open team-level risk, deliberately not acted on here. See
-  [`../cave/cave-final.md`](../cave/cave-final.md).
+  [`../cave/cave-final.md`](../archive/cave/cave-final.md).

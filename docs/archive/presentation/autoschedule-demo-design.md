@@ -2,7 +2,7 @@
 
 > **SUPERSEDED as a demo spec — 2026-08-09.** The demo that will be presented is the certified
 > **Toronto, Wed 5 Aug 2026** scenario in
-> [`presentation-assets/autoschedule-demo-runbook.md`](../../presentation-assets/autoschedule-demo-runbook.md).
+> [`presentation-assets/autoschedule-demo-runbook.md`](assets/autoschedule-demo-runbook.md).
 > Everything below describes an earlier **Venice, Wed 12 Aug 2026** design against a much older
 > commit. Keep it for the venue and weather analysis; do not take venues, dates, or times from it.
 

@@ -1,15 +1,45 @@
-# Trippy
+# Trippy — Weather-Aware Desktop Trip Planner
 
-Trippy is a Java 11 desktop trip planner built for CSC207. Travellers can create an
-itinerary, discover nearby activities, bookmark places, build a Day Plan, check weather,
-and automatically improve the order and timing of scheduled activities.
+[![Java CI](https://github.com/kkkaa43/trippy-trip-planner/actions/workflows/java-ci.yml/badge.svg)](https://github.com/kkkaa43/trippy-trip-planner/actions/workflows/java-ci.yml)
+![Java 11](https://img.shields.io/badge/Java-11-orange)
+![Swing](https://img.shields.io/badge/UI-Swing-blue)
+![JUnit 5](https://img.shields.io/badge/tests-JUnit%205-green)
+![Clean Architecture](https://img.shields.io/badge/design-Clean%20Architecture-purple)
 
-The project follows Clean Architecture. Entities and use cases do not depend on Swing,
-HTTP, JSON, Supabase, or other infrastructure details; concrete implementations are wired
-together in the outer `app.AppBuilder` composition root.
+Trippy plans a day of travel for you. Pick a destination, discover places from
+OpenStreetMap, drop them into a Day Plan, and let the scheduler reorder and retime the day
+around opening hours, travel time, mealtimes, daylight, and the hourly forecast. A grounded
+AI assistant, George, answers questions about the open itinerary.
+
+![Trippy Day Plan with map, travel legs, and per-hour weather](docs/images/trippy-day-plan.png)
+
+> **Team project.** Trippy was built by a five-person team for CSC207 (Software Design) at
+> the University of Toronto, Summer 2026. This repository is my portfolio copy of the
+> project with its full commit history; see [Team and contributions](#team-and-contributions)
+> for who built what.
+
+## Highlights
+
+- **Constraint-aware autoschedule** — previews a better order and timing for the day while
+  respecting locked activities, venue hours, availability, and feasible travel, and explains
+  every change before anything is saved.
+- **Live data with offline fallbacks** — Nominatim/Overpass places, OSRM/TomTom routing, and
+  Open-Meteo weather, each behind a gateway with a deterministic mock for offline runs.
+- **Grounded AI assistant** — George receives only the current itinerary as context, talks to
+  OpenAI through a rate-limited Cloudflare Worker that keeps the API key off the client, and
+  falls back to offline guidance when the service is unavailable.
+- **Clean Architecture throughout** — entities and use cases never import Swing, HTTP, JSON,
+  or Supabase; everything concrete is wired in one composition root, `app.AppBuilder`.
+- **Tested and checked in CI** — about 800 JUnit 5 tests run on every push and pull request,
+  using fakes and loopback HTTP servers instead of live services.
+
+| Autoschedule preview | Hourly weather |
+|---|---|
+| ![Autoschedule preview with explained improvements](docs/images/autoschedule-preview.png) | ![Hourly weather popup for an activity](docs/images/hourly-weather.png) |
 
 ## Table of contents
 
+- [Highlights](#highlights)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Run the application](#run-the-application)
@@ -21,6 +51,7 @@ together in the outer `app.AppBuilder` composition root.
 - [Testing and reports](#testing-and-reports)
 - [External services and limitations](#external-services-and-limitations)
 - [Web prototype](#web-prototype)
+- [Team and contributions](#team-and-contributions)
 
 ## Features
 
@@ -256,34 +287,10 @@ Generated reports:
 - Checkstyle: `target/checkstyle-result.xml`
 - Surefire test results: `target/surefire-reports/`
 
-## External services and limitations
+### Report configuration
 
-- Nominatim performs geocoding and named-place search.
-- Overpass discovers nearby OpenStreetMap activities.
-- OpenStreetMap supplies map tiles.
-- Open-Meteo supplies geocoding and hourly weather.
-- OSRM supplies key-free route estimates; TomTom can provide traffic-aware driving when a
-  key is configured.
-- Supabase supplies optional authentication, friends, sharing, and persistence.
-- Public services can time out, reject traffic, or rate-limit requests. Trippy reports this
-  separately from a genuine zero-result search and may show cached partial results.
-- Search results depend on the quality and completeness of OpenStreetMap data.
-- Venue hours are only as reliable as their OSM `opening_hours` tags.
-- The domain uses local dates and times and does not yet model destination time zones.
-- Trips are planned one day at a time; a multi-day itinerary contains separate Day Plans.
-- There is no hotel/home origin, so routing starts from the destination centre or the prior
-  scheduled activity.
-
-## Web prototype
-
-A retained secondary web prototype can be started with:
-
-```powershell
-.\mvnw.cmd compile exec:java "-Dexec.args=--web"
-```
-
-Both are configured as reports rather than build gates, so a threshold or a legacy style
-violation cannot block a teammate's commit.
+JaCoCo and Checkstyle are configured as reports rather than build gates, so a threshold or
+a legacy style violation cannot block a teammate's commit.
 
 **JaCoCo exclusions (intentional, documented):**
 
@@ -304,16 +311,37 @@ because the plugin's bundled version predates two modules the course file uses.
 68) and floods the build with `IllegalClassFormatException`. Only JDK classes were affected,
 so coverage numbers were never wrong, but the noise made the output unreadable.
 
-## Known limitations
+## External services and limitations
 
-- The current `Trip` model has a destination but no separate hotel/home origin. The geocoded destination centre is therefore the initial scheduling location.
-- The model uses same-day `LocalTime`; overnight trips and overnight opening hours are not supported.
-- Greedy scoring is deterministic but does not guarantee a globally optimal itinerary.
-- Distance estimates and persistence remain mock/in-memory implementations.
-- Live place discovery is optional and uses public Nominatim/Overpass services; offline mode remains the supported default.
-- Autoschedule's own limitations are listed under [Autoschedule (Day Plan)](#autoschedule-day-plan): day-wide weather, unknown travel provenance, JVM-default transit time zone, and driving not yet live-verified.
+- Nominatim performs geocoding and named-place search.
+- Overpass discovers nearby OpenStreetMap activities.
+- OpenStreetMap supplies map tiles.
+- Open-Meteo supplies geocoding and hourly weather.
+- OSRM supplies key-free route estimates; TomTom can provide traffic-aware driving when a
+  key is configured.
+- Supabase supplies optional authentication, friends, sharing, and persistence.
+- Public services can time out, reject traffic, or rate-limit requests. Trippy reports this
+  separately from a genuine zero-result search and may show cached partial results.
+- Search results depend on the quality and completeness of OpenStreetMap data.
+- Venue hours are only as reliable as their OSM `opening_hours` tags.
+- The domain uses local dates and times and does not yet model destination time zones.
+- Trips are planned one day at a time; a multi-day itinerary contains separate Day Plans.
+- There is no hotel/home origin, so routing starts from the destination centre or the prior
+  scheduled activity.
+- Times are same-day `LocalTime`, so overnight trips and overnight opening hours are not
+  supported.
+- Autoschedule scoring is deterministic and greedy; it does not guarantee a globally optimal
+  itinerary.
 
-## REST API
+## Web prototype
+
+A retained secondary web prototype can be started with:
+
+```powershell
+.\mvnw.cmd compile exec:java "-Dexec.args=--web"
+```
+
+Its REST API:
 
 - `POST /api/trips`
 - `GET /api/trips/{tripId}`
@@ -328,10 +356,48 @@ so coverage numbers were never wrong, but the noise made the output unreadable.
 - `GET /api/trips/{tripId}/weather`
 - `GET /api/trips/{tripId}/weather/hourly`
 
-## Contribution
+<a id="contribution"></a>
 
-Shiyuan (Dennis) Lyu: Share Trip Clean Architecture flow and clipboard-ready Swing preview; interactive Day/Week/Month calendar expansion and synchronized navigation; related unit, Swing structure, and application integration tests; Create Trip input boundary/interactor validation and tests; Trip Setup create/edit Swing workflow; active-trip composition; offline-by-default service selection; reviewed integration and tests for Raashid's map/place branch; Auto Schedule, scoring policy, schedule invariants, weather weighting, Open-Meteo adapter, Maven/JUnit 5 configuration, and documentation.
+## Team and contributions
 
-Bianca: Edit Itinerary interactor (`EditItineraryInteractor`), `ItineraryDataAccessInterface`, `InMemoryItineraryDataAccessObject`, Options/API wiring for in-place itinerary updates, and related unit test.
+### My contributions — Shiyuan (Dennis) Lyu
 
-Raashid: interactive Swing map, Nominatim/Overpass place discovery, cached-place repository, and web map integration.
+- **Project foundation** — set up the Java 11 Maven build, JUnit 5, and the GitHub Actions CI
+  pipeline, and established the Clean Architecture dependency composition
+  ([`AppBuilder`](src/main/java/app/AppBuilder.java)).
+- **First weather-aware scheduler** — the initial autoschedule with scoring policy, schedule
+  invariants, and weather weighting, plus the
+  [Open-Meteo adapter](src/main/java/interface_adapter/weather/OpenMeteoWeatherService.java)
+  and their tests.
+- **Create Trip and Trip Setup** — the
+  [`CreateTripUseCase`](src/main/java/use_case/usecases/CreateTripUseCase.java) input
+  boundary and validation, the Swing create/edit workflow, and active-trip composition across
+  every panel.
+- **Share Trip** — the full Clean Architecture flow
+  ([`ShareTripUseCase`](src/main/java/use_case/usecases/ShareTripUseCase.java)) and a
+  clipboard-ready Swing preview.
+- **Interactive calendar** — Day, Week, and Month views with synchronized navigation
+  ([`CalendarPanel`](src/main/java/views/CalendarPanel.java)).
+- **Hourly weather in planning** — live hourly forecasts on activities and the hourly weather
+  popup.
+- **George trip assistant** — the
+  [OpenAI gateway](src/main/java/interface_adapter/ai/OpenAiTripAssistantGateway.java), the
+  [offline fallback](src/main/java/interface_adapter/ai/FallbackTripAssistantGateway.java),
+  and the [Cloudflare Worker proxy](george-proxy) with input validation and rate limiting.
+- **Integration** — reviewed and integrated the map and place-discovery branch, keeping
+  offline-by-default service selection and adding adapter and ViewModel tests.
+
+### Teammates
+
+- **Emily Yan** — the final autoschedule Preview/Apply lifecycle, switchable scheduling factors
+  and their UI, Day Plan travel repair, and the Checkstyle cleanup.
+- **Raashid** — the interactive Swing map, Nominatim/Overpass place discovery and caching,
+  multi-day trips, and the package restructuring.
+- **Bianca** — Supabase accounts and persistence, friends, View/Edit/Admin trip access, and
+  the Edit Itinerary use case.
+- **Alex** — Activity Discovery failure handling and search test coverage, plus the
+  accessibility report.
+
+Course material, such as the project blueprint, accessibility report, and AI-usage statement,
+is kept in [`docs/course`](docs/course). Earlier planning notes and presentation material are
+in [`docs/archive`](docs/archive).
